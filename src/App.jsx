@@ -13,7 +13,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // --- Configuration ---
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://sat-backend-55lg.onrender.com";
 
 // --- SVG Icons ---
 const PipelineIcon = () => (
