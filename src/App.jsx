@@ -5,7 +5,6 @@ import axios from "axios"
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
-import { ChevronDown } from "lucide-react"
 import SuburbanLogo from "./assets/SuburbanLogo.png"
 
 // --- Leaflet Icon Fix ---
@@ -158,44 +157,60 @@ function App() {
 
   return (
     <div
-      className="text-white h-screen font-sans overflow-hidden flex flex-col"
+      className="text-white h-screen font-sans overflow-hidden flex flex-col relative"
       style={{ background: "linear-gradient(180deg, #14101F 26.5%, #C1052B 100%)" }}
     >
+      {/* Decorative white block at bottom right */}
+      <div
+        className="absolute"
+        style={{
+          width: "1175px",
+          height: "398.87px",
+          right: "0px",
+          bottom: "-29.87px",
+          background: "#FFFFFF",
+          opacity: 0.1, // make it blend a bit with background
+          borderRadius: "12px",
+          pointerEvents: "none",
+        }}
+      ></div>
+
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-3 flex-shrink-0">
+      <nav className="flex items-center justify-between px-6 py-3 flex-shrink-0 relative z-10">
         <img src={SuburbanLogo} alt="Suburban Logo" className="h-8 w-auto" />
 
-        <div className="hidden md:flex items-center space-x-6">
-          {["Why Suburban", "Solutions", "Pricing", "Resources"].map((item) => (
-            <a
-              key={item}
-              href="#"
-              className="flex items-center text-white hover:text-gray-300 transition-colors text-sm font-medium"
-            >
-              {item}
-              <ChevronDown className="ml-1 h-3 w-3" />
-            </a>
-          ))}
+        <div className="hidden md:flex items-center space-x-8">
+          <a href="#" className="text-white hover:text-gray-300 transition-colors">
+            Why Suburban
+          </a>
+          <a href="#" className="text-white hover:text-gray-300 transition-colors">
+            Solutions
+          </a>
+          <a href="#" className="text-white hover:text-gray-300 transition-colors">
+            Pricing
+          </a>
+          <a href="#" className="text-white hover:text-gray-300 transition-colors">
+            Resources
+          </a>
         </div>
 
         <div className="flex items-center space-x-3">
-          <button className="border border-white text-white px-5 py-2 rounded-full font-medium transition-colors text-sm hover:bg-white/10">
+          <button className="border border-white text-white px-6 py-2 rounded-full font-medium transition-colors text-sm hover:bg-white/10">
             Book a demo
           </button>
-          <button className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-full font-medium transition-colors text-sm">
+          <button className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-medium transition-colors text-sm">
             Try for free
           </button>
         </div>
       </nav>
 
       {/* Content */}
-      <div className="flex-1 px-6 pb-4 flex flex-col overflow-hidden">
+      <div className="flex-1 px-6 pb-4 flex flex-col overflow-hidden relative z-10">
         <header className="text-center mb-6 flex-shrink-0">
-          <h1 className="text-3xl font-bold text-white mb-1">Satellite Pipeline</h1>
-          <p className="text-gray-300 text-xs">Run on-demand jobs in the cloud</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Satellite Data Pipeline</h1>
+          <p className="text-gray-300 text-sm">Define and run on-demand processing jobs in the cloud</p>
         </header>
 
-        {/* --- Grid with wider right panel --- */}
         <main className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto flex-1 overflow-hidden w-full">
           {/* Left Panel */}
           <div className="lg:col-span-1 bg-gray-900/80 backdrop-blur-sm p-4 rounded-lg w-full">
