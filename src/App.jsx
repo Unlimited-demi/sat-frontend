@@ -1,19 +1,23 @@
-import React, { useState, useRef } from 'react';
-import axios from 'axios';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+"use client"
+
+import { useState, useRef } from "react"
+import axios from "axios"
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet"
+import "leaflet/dist/leaflet.css"
+import L from "leaflet"
+import { ChevronDown } from "lucide-react"
+import SuburbanLogo from "./assets/SuburbanLogo.png"
 
 // --- Leaflet Icon Fix ---
-delete L.Icon.Default.prototype._getIconUrl;
+delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+})
 
 // --- Configuration ---
-const API_BASE_URL = "https://sat-backend-55lg.onrender.com";
+const API_BASE_URL = "https://sat-backend-55lg.onrender.com"
 
 // --- SVG Icons ---
 const PipelineIcon = () => (
@@ -31,101 +35,96 @@ const PipelineIcon = () => (
       d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
     />
   </svg>
-);
+)
 
 const LoadingSpinner = () => (
-  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
-);
+  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+)
 
 // --- Map Interaction Component ---
 function MapClickHandler({ setParams }) {
   useMapEvents({
     click(e) {
-      const { lat, lng } = e.latlng;
-      setParams(prevParams => ({
+      const { lat, lng } = e.latlng
+      setParams((prevParams) => ({
         ...prevParams,
-        lat: parseFloat(lat.toFixed(4)),
-        lon: parseFloat(lng.toFixed(4)),
-      }));
+        lat: Number.parseFloat(lat.toFixed(4)),
+        lon: Number.parseFloat(lng.toFixed(4)),
+      }))
     },
-  });
-  return null;
+  })
+  return null
 }
 
 // --- Main App Component ---
 function App() {
-  const today = new Date();
-  const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(today.getDate() - 7);
+  const today = new Date()
+  const sevenDaysAgo = new Date(today)
+  sevenDaysAgo.setDate(today.getDate() - 7)
 
   const [params, setParams] = useState({
     lat: 6.5244,
     lon: 3.3792,
-    startDate: sevenDaysAgo.toISOString().split('T')[0],
-    endDate: today.toISOString().split('T')[0],
-    scriptType: 'true_color',
-  });
+    startDate: sevenDaysAgo.toISOString().split("T")[0],
+    endDate: today.toISOString().split("T")[0],
+    scriptType: "true_color",
+  })
 
-  const [displayedImage, setDisplayedImage] = useState(null);
-  const [temporalResults, setTemporalResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [info, setInfo] = useState('Select an area and define a processing job.');
-  const markerRef = useRef(null);
+  const [displayedImage, setDisplayedImage] = useState(null)
+  const [temporalResults, setTemporalResults] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [info, setInfo] = useState("Select an area and define a processing job.")
+  const markerRef = useRef(null)
 
-  const handleParamChange = e => {
-    setParams({ ...params, [e.target.name]: e.target.value });
-  };
+  const handleParamChange = (e) => {
+    setParams({ ...params, [e.target.name]: e.target.value })
+  }
 
-  const handleFetchImage = async e => {
-    e.preventDefault();
+  const handleFetchImage = async (e) => {
+    e.preventDefault()
 
-    setIsLoading(true);
-    setError('');
-    setDisplayedImage(null);
-    setTemporalResults([]);
-    setInfo(`Submitting job to Sentinel pipeline...`);
+    setIsLoading(true)
+    setError("")
+    setDisplayedImage(null)
+    setTemporalResults([])
+    setInfo("Submitting job to Sentinel pipeline...")
 
     try {
-      if (params.scriptType === 'temporal_list') {
-        const response = await axios.post(`${API_BASE_URL}/api/sentinel-hub/process`, params);
+      if (params.scriptType === "temporal_list") {
+        const response = await axios.post(`${API_BASE_URL}/api/sentinel-hub/process`, params)
         if (response.data.results && response.data.results.length > 0) {
-          setTemporalResults(response.data.results);
-          setInfo(`Successfully fetched ${response.data.results.length} images.`);
+          setTemporalResults(response.data.results)
+          setInfo(`Successfully fetched ${response.data.results.length} images.`)
         } else {
-          setInfo('No images found for the selected criteria.');
+          setInfo("No images found for the selected criteria.")
         }
       } else {
-        const response = await axios.post(
-          `${API_BASE_URL}/api/sentinel-hub/process`,
-          params,
-          { responseType: 'blob' }
-        );
-        const imageUrl = URL.createObjectURL(response.data);
-        setDisplayedImage(imageUrl);
-        setInfo(`Successfully processed and loaded image.`);
+        const response = await axios.post(`${API_BASE_URL}/api/sentinel-hub/process`, params, { responseType: "blob" })
+        const imageUrl = URL.createObjectURL(response.data)
+        setDisplayedImage(imageUrl)
+        setInfo("Successfully processed and loaded image.")
       }
     } catch (err) {
-      const errorDetail =
-        err.response?.data?.detail || 'An unknown error occurred. Check the backend logs.';
-      setError(`Pipeline failed: ${errorDetail}`);
-      setInfo('');
-      console.error('Fetch image error:', err);
+      const errorDetail = err.response?.data?.detail || "An unknown error occurred. Check the backend logs."
+      setError(`Pipeline failed: ${errorDetail}`)
+      setInfo("")
+      console.error("Fetch image error:", err)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   // --- UI Rendering ---
   const ViewerContent = () => {
-    if (isLoading) return <LoadingSpinner />;
+    if (isLoading) return <LoadingSpinner />
     if (error)
       return (
         <div className="text-red-400 text-center p-4">
           <p className="font-bold mb-2">Pipeline Error</p>
           <p className="text-sm">{error}</p>
         </div>
-      );
+      )
 
     if (temporalResults.length > 0) {
       return (
@@ -133,61 +132,90 @@ function App() {
           {temporalResults.map((result, index) => (
             <div key={index} className="bg-gray-900 rounded-lg p-2">
               <img
-                src={result.image}
+                src={result.image || "/placeholder.svg"}
                 alt={`Scene from ${result.date}`}
                 className="w-full h-auto object-contain rounded-md"
               />
-              <p className="text-xs text-center text-gray-400 mt-1">
-                {new Date(result.date).toLocaleString()}
-              </p>
+              <p className="text-xs text-center text-gray-400 mt-1">{new Date(result.date).toLocaleString()}</p>
             </div>
           ))}
         </div>
-      );
+      )
     }
 
     if (displayedImage) {
       return (
         <img
-          src={displayedImage}
+          src={displayedImage || "/placeholder.svg"}
           alt="Processed satellite view"
           className="w-full h-full object-contain"
         />
-      );
+      )
     }
 
-    return <p className="text-gray-500 px-4 text-center">{info}</p>;
-  };
+    return <p className="text-gray-400 px-4 text-center">{info}</p>
+  }
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen font-sans flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl mx-auto">
-        <header className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
-            Satellite Data Pipeline
-          </h1>
-          <p className="text-gray-400 mt-2">Define and run on-demand processing jobs in the cloud.</p>
+    <div
+      className="text-white h-screen font-sans overflow-hidden flex flex-col"
+      style={{ background: "linear-gradient(180deg, #14101F 26.5%, #C1052B 100%)" }}
+    >
+      {/* Navbar */}
+      <nav className="flex items-center justify-between px-6 py-3 flex-shrink-0">
+        <img src={SuburbanLogo} alt="Suburban Logo" className="h-8 w-auto" />
+
+        <div className="hidden md:flex items-center space-x-6">
+          {["Why Suburban", "Solutions", "Pricing", "Resources"].map((item) => (
+            <a
+              key={item}
+              href="#"
+              className="flex items-center text-white hover:text-gray-300 transition-colors text-sm font-medium"
+            >
+              {item}
+              <ChevronDown className="ml-1 h-3 w-3" />
+            </a>
+          ))}
+        </div>
+
+        <div className="flex items-center space-x-3">
+          <button className="border border-white text-white px-5 py-2 rounded-full font-medium transition-colors text-sm hover:bg-white/10">
+            Book a demo
+          </button>
+          <button className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-full font-medium transition-colors text-sm">
+            Try for free
+          </button>
+        </div>
+      </nav>
+
+      {/* Content */}
+      <div className="flex-1 px-6 pb-4 flex flex-col overflow-hidden">
+        <header className="text-center mb-6 flex-shrink-0">
+          <h1 className="text-3xl font-bold text-white mb-1">Satellite Pipeline</h1>
+          <p className="text-gray-300 text-xs">Run on-demand jobs in the cloud</p>
         </header>
 
-        <main className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-2 bg-gray-800 p-6 rounded-lg shadow-2xl h-fit">
+        {/* --- Grid with wider right panel --- */}
+        <main className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto flex-1 overflow-hidden w-full">
+          {/* Left Panel */}
+          <div className="lg:col-span-1 bg-gray-900/80 backdrop-blur-sm p-4 rounded-lg w-full">
             <form onSubmit={handleFetchImage}>
-              <h3 className="text-lg font-semibold mb-2 text-gray-200">1. Select Area of Interest</h3>
-              <div className="h-64 w-full mb-4 rounded-lg overflow-hidden z-0">
+              <h3 className="text-base font-semibold mb-3 text-white">1. Select Area of Interest</h3>
+              <div className="h-48 w-full mb-3 rounded-lg overflow-hidden">
                 <MapContainer
                   center={[params.lat, params.lon]}
                   zoom={10}
                   scrollWheelZoom={true}
-                  style={{ height: '100%', width: '100%' }}
+                  style={{ height: "100%", width: "100%" }}
                 >
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   <Marker position={[params.lat, params.lon]} ref={markerRef} />
                   <MapClickHandler setParams={setParams} />
                 </MapContainer>
               </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                  <label htmlFor="lat" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="lat" className="block text-xs font-medium text-gray-300 mb-1">
                     Latitude
                   </label>
                   <input
@@ -197,11 +225,11 @@ function App() {
                     id="lat"
                     value={params.lat}
                     onChange={handleParamChange}
-                    className="bg-gray-700 w-full p-2.5 rounded-lg"
+                    className="bg-gray-800 text-white w-full p-2 rounded-lg border border-gray-700 focus:border-red-500 focus:outline-none text-sm"
                   />
                 </div>
                 <div>
-                  <label htmlFor="lon" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="lon" className="block text-xs font-medium text-gray-300 mb-1">
                     Longitude
                   </label>
                   <input
@@ -211,20 +239,15 @@ function App() {
                     id="lon"
                     value={params.lon}
                     onChange={handleParamChange}
-                    className="bg-gray-700 w-full p-2.5 rounded-lg"
+                    className="bg-gray-800 text-white w-full p-2 rounded-lg border border-gray-700 focus:border-red-500 focus:outline-none text-sm"
                   />
                 </div>
               </div>
 
-              <h3 className="text-lg font-semibold mt-6 mb-2 text-gray-200">
-                2. Time Range & Processing
-              </h3>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <h3 className="text-base font-semibold mb-3 text-white">2. Time Range and Processing</h3>
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label
-                    htmlFor="startDate"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
+                  <label htmlFor="startDate" className="block text-xs font-medium text-gray-300 mb-1">
                     Start Date
                   </label>
                   <input
@@ -233,14 +256,11 @@ function App() {
                     id="startDate"
                     value={params.startDate}
                     onChange={handleParamChange}
-                    className="bg-gray-700 w-full p-2.5 rounded-lg"
+                    className="bg-gray-800 text-white w-full p-2 rounded-lg border border-gray-700 focus:border-red-500 focus:outline-none text-sm"
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="endDate"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
+                  <label htmlFor="endDate" className="block text-xs font-medium text-gray-300 mb-1">
                     End Date
                   </label>
                   <input
@@ -249,15 +269,12 @@ function App() {
                     id="endDate"
                     value={params.endDate}
                     onChange={handleParamChange}
-                    className="bg-gray-700 w-full p-2.5 rounded-lg"
+                    className="bg-gray-800 text-white w-full p-2 rounded-lg border border-gray-700 focus:border-red-500 focus:outline-none text-sm"
                   />
                 </div>
               </div>
-              <div className="mb-6">
-                <label
-                  htmlFor="scriptType"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
+              <div className="mb-4">
+                <label htmlFor="scriptType" className="block text-xs font-medium text-gray-300 mb-1">
                   Processing Type
                 </label>
                 <select
@@ -265,7 +282,7 @@ function App() {
                   name="scriptType"
                   value={params.scriptType}
                   onChange={handleParamChange}
-                  className="bg-gray-700 w-full p-2.5 rounded-lg"
+                  className="bg-gray-800 text-white w-full p-2 rounded-lg border border-gray-700 focus:border-red-500 focus:outline-none text-sm"
                 >
                   <option value="true_color">Single Image (True Color)</option>
                   <option value="ndvi">Single Image (NDVI)</option>
@@ -276,26 +293,27 @@ function App() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full mt-2 flex items-center justify-center bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-500 font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105"
+                className="w-full flex items-center justify-center bg-red-600 hover:bg-red-700 disabled:bg-gray-500 text-white font-bold py-2.5 px-4 rounded-lg transition-colors text-sm"
               >
                 <PipelineIcon />
-                {isLoading ? 'Processing...' : 'Run Pipeline'}
+                {isLoading ? "Processing..." : "Run Pipeline"}
               </button>
             </form>
           </div>
 
-          <div
-            className="lg:col-span-3 bg-gray-800 p-6 rounded-lg shadow-2xl flex flex-col items-center justify-center"
-            style={{ height: '720px' }}
-          >
-            <div className="w-full h-full flex items-center justify-center bg-black rounded-md overflow-hidden">
+          {/* Right Panel */}
+          <div className="lg:col-span-2 bg-gray-900/60 backdrop-blur-sm p-4 rounded-lg overflow-hidden w-full">
+            <div
+              className="w-full bg-gray-800/50 rounded-lg flex items-center justify-center overflow-hidden"
+              style={{ height: "100%" }}
+            >
               <ViewerContent />
             </div>
           </div>
         </main>
       </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
